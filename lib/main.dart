@@ -30,26 +30,29 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
-  late Animation<double> animation;
+  late Animation animation;
   // late Animation<Color> animation;
   late AnimationController animationController;
+
+  void myListneer(status) {
+    if (status == AnimationStatus.completed) {
+      animation.removeStatusListener(myListneer);
+      animationController.reset();
+      animation = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+          parent: animationController, curve: Curves.fastOutSlowIn));
+      animationController.forward();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    animationController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 3500));
-    // animation = Tween(begin: 0.0, end: 1.0).animate(animationController);
-    animation =
-        CurvedAnimation(parent: animationController, curve: Curves.bounceInOut);
+    animationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2));
 
-    animation.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        animationController.reverse();
-      } else if (status == AnimationStatus.dismissed) {
-        animationController.forward();
-      }
-    });
+    animation = Tween(begin: -1.0, end: 0.0).animate(CurvedAnimation(
+        parent: animationController, curve: Curves.fastOutSlowIn))
+      ..addStatusListener(myListneer);
     animationController.forward();
   }
 
@@ -61,28 +64,21 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color.fromARGB(255, 33, 36, 44),
         body: Center(
-          child: AnimationLogo(
-            animation: animation,
+            child: AnimatedBuilder(
+          animation: animationController,
+          builder: (context, child) => Transform(
+            transform:
+                Matrix4.translationValues(animation.value * width, 0.0, 0),
+            child: Container(
+              height: 200,
+              width: 200,
+              color: Colors.green,
+            ),
           ),
-        ));
-  }
-}
-
-class AnimationLogo extends AnimatedWidget {
-  final Tween<double> _sizeAnim = Tween<double>(begin: 30.0, end: 100.0);
-  AnimationLogo({Key? key, required Animation<double> animation})
-      : super(key: key, listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    final Animation<double> animation = listenable as Animation<double>;
-    return Transform.scale(
-        scale: animation.value * 50,
-        child: const FlutterLogo(
-          size: 50,
-        ));
+        )));
   }
 }
